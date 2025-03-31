@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Game Hứng Chai Bia</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f0f0f0;
+      font-family: Arial, sans-serif;
+    }
+    canvas {
+      border: 2px solid #333;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    }
+    .button-container {
+      display: flex;
+      gap: 15px; /* Khoảng cách giữa các nút */
+      margin-top: 20px;
+    }
+    button {
+      padding: 12px 25px;
+      font-size: 18px;
+      cursor: pointer;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    #resetButton {
+      display: none;
+    }
+  </style>
+  <img src="images.jpeg" alt="">
+
+</head>
+<body>
+<canvas id="gameCanvas" width="480" height="640"></canvas>
+<div class="button-container">
+  <button id="startButton">Start Game</button>
+  <button id="resetButton">Reset Game</button>
+</div>
+<script>
+  let canvas = document.getElementById("gameCanvas");
+  let ctx = canvas.getContext("2d");
+  let startButton = document.getElementById("startButton");
+  let resetButton = document.getElementById("resetButton");
+
+  // Tải hình ảnh
+  let backgroundImage = new Image();
+  backgroundImage.src = "beerbackground.png"; // Hình nền (cần có file hoặc dùng Base64)
+  let beerBottleImage = new Image();
+  beerBottleImage.src = "beerbottle.png";
+  let beerBoxImage = new Image();
+  beerBoxImage.src = "beerbox.png";
+
+  // Biến kiểm tra hình ảnh có tải được không
+  let backgroundImageLoaded = false;
+  let beerBottleImageLoaded = false;
+  let beerBoxImageLoaded = false;
+
+  // Đối tượng thùng gỗ
+  let Box = {
+    x: canvas.width / 2 - 40,
+    y: canvas.height - 80, // Sửa vị trí y để thùng gỗ gần đáy
+    width: 80,
+    height: 60,
+    speed: 10
+  };
+
+  let beerBottle = [];
+  let countBeer = 0;
+  let missedBeer = 0;
+  let gameOver = false;
+  let gameStarted = false;
+
+  let leftPressed = false;
+  let rightPressed = false;
+
+  // Điều khiển phím
+  function handleKeyPress() {
+    document.addEventListener("keydown", function(event) {
+      if (event.key === "ArrowLeft") {
+        leftPressed = true;
+      } else if (event.key === "ArrowRight") {
+        rightPressed = true;
+      }
+    });
+
+    document.addEventListener("keyup", function(event) {
+      if (event.key === "ArrowLeft") {
+        leftPressed = false;
+      } else if (event.key === "ArrowRight") {
+        rightPressed = false;
+      }
+    });
+  }
+
+  // Tạo chai bia mới
+  function createBeerBottle() {
+    let bottle = {
+      x: Math.random() * (canvas.width - 30),
+      y: -50,
+      width: 30,
+      height: 50,
+      speed: 8
+    };
+    beerBottle.push(bottle);
+  }
+
+  // // Vẽ hình nền
+  function drawBackground() {
+    if (backgroundImageLoaded) {
+      ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+    } else {
+      ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+  }
+
+  // Vẽ thùng gỗ (beer box)
+  function drawBeerBox() {
+    if (beerBoxImageLoaded) {
+      ctx.drawImage(beerBoxImage, Box.x, Box.y, Box.width, Box.height);
+    } else {
+      ctx.fillStyle = "blue";
+      ctx.fillRect(Box.x, Box.y, Box.width, Box.height);
+    }
+  }
+
+  // Vẽ chai bia
+  function drawBeerBottles() {
+    for (let i = 0; i < beerBottle.length; i = i + 1) {
+      let bottle = beerBottle[i];
+      if (beerBottleImageLoaded) {
+        ctx.drawImage(beerBottleImage, bottle.x, bottle.y, bottle.width, bottle.height);
+      } else {
+        ctx.fillStyle = "brown";
+        ctx.fillRect(bottle.x, bottle.y, bottle.width, bottle.height);
+      }
+    }
+  }
+
+  // Vẽ thông tin game
+  function drawGameInfo() {
+    ctx.fillStyle = "black";
+    ctx.font = "20px Arial";
+    ctx.textAlign = "left";
+    ctx.fillText("Score: " + countBeer + "/20", 10, 30);
+    ctx.fillText("missed: " + missedBeer + "/3", 10, 60);
+  }
+
+  // Vẽ màn hình chờ
+  function drawStartScreen() {
+    ctx.fillStyle = "black";
+    ctx.font = "30px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText("Nhấn 'Bắt đầu' để chơi", canvas.width / 2, canvas.height / 2);
+    // if (!backgroundImageLoaded || !beerBottleImageLoaded || !beerBoxImageLoaded) {
+    //   ctx.font = "20px Arial";
+    //   ctx.fillStyle = "red";
+    //   ctx.fillText("Không thể tải hình ảnh! Dùng hình mặc định.", canvas.width / 2, canvas.height / 2 + 40);
+    // }
+  }
+
+  // Vẽ màn hình thắng
+  function drawWinScreen() {
+    ctx.fillStyle = "green";
+    ctx.font = "40px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText("Winner!", canvas.width / 2, canvas.height / 2 - 20);
+    ctx.font = "20px Arial";
+    ctx.fillText("Chúc mừng bạn đã chiến thắng!", canvas.width / 2, canvas.height / 2 + 20);
+  }
+
+  // Vẽ màn hình thua
+  function drawLoseScreen() {
+    ctx.fillStyle = "red";
+    ctx.font = "40px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText("Losser!", canvas.width / 2, canvas.height / 2 - 20);
+    ctx.font = "20px Arial";
+    ctx.fillText("Ấn vào nút Reset Game để chơi lại!", canvas.width / 2, canvas.height / 2 + 20);
+  }
+
+  // Cập nhật vị trí thùng gỗ và chai bia
+  function update() {
+    if (gameOver) {
+      return;
+    }
+
+    // Di chuyển thùng gỗ
+    if (leftPressed && Box.x > 0) {
+      Box.x = Box.x - Box.speed;
+    }
+    if (rightPressed && Box.x < canvas.width - Box.width) {
+      Box.x = Box.x + Box.speed;
+    }
+
+    // Cập nhật vị trí chai bia
+    for (let i = 0; i < beerBottle.length; i = i + 1) {
+      let bottle = beerBottle[i];
+      bottle.y = bottle.y + bottle.speed;
+
+      // Kiểm tra va chạm với thùng gỗ
+      if (bottle.y + bottle.height > Box.y &&
+              bottle.x + bottle.width > Box.x &&
+              bottle.x < Box.x + Box.width) {
+        countBeer = countBeer + 1;
+        beerBottle.splice(i, 1);
+        i = i - 1;
+        if (countBeer >= 20) {
+          gameOver = true;
+          resetButton.style.display = "block";
+        }
+      }
+      // Kiểm tra chai bia rơi ra ngoài
+      else if (bottle.y > canvas.height) {
+        missedBeer = missedBeer + 1;
+        beerBottle.splice(i, 1);
+        i = i - 1;
+        if (missedBeer >= 3) {
+          gameOver = true;
+          resetButton.style.display = "block";
+        }
+      }
+    }
+  }
+
+  // Reset game
+  function resetGame() {
+    beerBottle = [];
+    countBeer = 0;
+    missedBeer = 0;
+    gameOver = false;
+    gameStarted = true;
+    Box.x = canvas.width / 2 - 40;
+    resetButton.style.display = "none";
+  }
+
+  // Vòng lặp game
+  function gameLoop() {
+    drawBackground();
+
+    if (gameStarted === false) {
+      drawStartScreen();
+    } else if (gameOver && countBeer >= 10) {
+      drawWinScreen();
+    } else if (gameOver && missedBeer >= 3) {
+      drawLoseScreen();
+    } else {
+      drawBeerBox();
+      drawBeerBottles();
+      drawGameInfo();
+      update();
+
+      if (Math.random() < 0.02) {
+        createBeerBottle();
+      }
+    }
+
+    requestAnimationFrame(gameLoop);
+  }
+
+  // Kiểm tra hình ảnh tải
+  backgroundImage.onload = function() {
+    backgroundImageLoaded = true;
+    console.log("Hình nền đã tải thành công!");
+  };
+  beerBottleImage.onload = function() {
+    beerBottleImageLoaded = true;
+    console.log("Hình chai bia đã tải thành công!");
+  };
+  beerBoxImage.onload = function() {
+    beerBoxImageLoaded = true;
+    console.log("Hình thùng gỗ đã tải thành công!");
+  };
+  backgroundImage.onerror = function() {
+    console.error("Không thể tải hình nền!");
+    backgroundImageLoaded = false;
+  };
+  beerBottleImage.onerror = function() {
+    console.error("Không thể tải hình chai bia!");
+    beerBottleImageLoaded = false;
+  };
+  beerBoxImage.onerror = function() {
+    console.error("Không thể tải hình thùng gỗ!");
+    beerBoxImageLoaded = false;
+  };
+
+  // Xử lý sự kiện nút
+  startButton.addEventListener("click", function() {
+    gameStarted = true;
+    startButton.style.display = "none";
+  });
+
+  resetButton.addEventListener("click", function() {
+    resetGame();
+  });
+
+  // Gọi hàm điều khiển phím và chạy game
+  handleKeyPress();
+  setTimeout(function() {
+    gameLoop();
+  }, 1000); // Chờ 1 giây để hình ảnh tải
+</script>
+</body>
+</html>
