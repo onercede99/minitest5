@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quản lý sổ tiết kiệm</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .input-group {
+      margin-bottom: 10px;
+    }
+    label {
+      display: inline-block;
+      width: 120px;
+    }
+    input {
+      padding: 5px;
+      width: 200px;
+    }
+    button {
+      padding: 8px 15px;
+      margin-right: 10px;
+      cursor: pointer;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+  </style>
+</head>
+<body>
+<h2>Quản lý sổ tiết kiệm</h2>
+
+<div class="input-group">
+  <label>Mã số:</label>
+  <input type="text" id="maSo" maxlength="5" placeholder="Nhập mã số tối đa 5 ký tự">
+</div>
+
+<div class="input-group">
+  <label>Loại tiết kiệm:</label>
+  <input type="text" id="loaiTietKiem" maxlength="10" placeholder="Nhập ngắn hạn hoặc dài hạn">
+</div>
+
+<div class="input-group">
+  <label>Họ tên KH:</label>
+  <input type="text" id="hoTen" maxlength="30" placeholder="Nhập họ tên của bạn">
+</div>
+
+<div class="input-group">
+  <label>CMND:</label>
+  <input type="number" id="cmnd" placeholder="Nhập số CMND từ 9 - 12 ký tự">
+</div>
+
+<div class="input-group">
+  <label>Ngày mở sổ:</label>
+  <input type="text" id="ngayMoSo" placeholder="dd/mm/yy">
+</div>
+
+<div class="input-group">
+  <label>Số tiền gửi:</label>
+  <input type="number" id="soTien" placeholder="Nhập số tiền gửi" >
+</div>
+
+<button onclick="themSoTietKiem()">Thêm sổ</button>
+
+<h3>Danh sách sổ tiết kiệm</h3>
+<div id="danhSach">
+  <table id="bangSoTietKiem">
+    <thead>
+    <tr>
+      <th>Mã số</th>
+      <th>Loại TK</th>
+      <th>Họ tên</th>
+      <th>CMND</th>
+      <th>Ngày mở</th>
+      <th>Số tiền</th>
+      <th>Thao tác</th>
+    </tr>
+    </thead>
+    <tbody id="bangBody">
+    </tbody>
+  </table>
+</div>
+
+<script src="Cau3.js">
+</script>
+</body>
+</html>
